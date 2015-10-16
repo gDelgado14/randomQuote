@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!--Import Google Icon Font-->
+		<link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<!--Import materialize.css-->
+        <link type="text/css" rel="stylesheet" href="dist/css/materialize.min.css"  media="screen,projection"/>
+        
+        <!--Let browser know website is optimized for mobile-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        
+        <!-- include Firebase library -->
+        <script src="https://cdn.firebase.com/js/client/2.3.1/firebase.js"></script>
+        
+        <style>
+            h1 {
+                font-weight: light;
+                font-style: italic;
+            }
+        </style>
+	</head>
+	<body>
+    	<div class="container">
+        	
+        	<div class="row">
+    	        <h1 class="col s8 offset-s3 red-text text-lighten-2">Your Daily Quotes</h1>
+        	</div>
+        	
+        	<div class="row">
+                <div class="col offset-m3 s12 m6">
+                    <div class="card teal lighten-2">
+                        <div class="card-content white-text">
+                            <span class="card-title">Today's Quote</span>
+                            <p id="quote-body"></p>
+                        </div>
+                        <div class="card-action">
+                            <blockquote>
+                                <span class="red-text text-lighten-4" id="auth"></span>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+        	</div> <!-- /.row -->
+        	
+        	<div class="row">
+            	<div class="col s4 m4 offset-m3 offset-s3">
+                	<a class="waves-effect waves-light btn" id="rand">random quote</a>
+            	</div>
+        	</div>
+    	</div>
+        <!--Import jQuery before materialize.js-->
+        <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+        <script type="text/javascript" src="dist/js/materialize.min.js"></script>
+        
+        <script type="text/javascript">
+            
+            var ref = new Firebase("https://randomquote.firebaseio.com/");
+            var chosen, entries, quote, quotes;
+            
+            
+            // get size of firebase database
+            Object.size = function(obj) {
+                var size = 0, key;
+                for (key in obj) {
+                    if (obj.hasOwnProperty(key)) size++;
+                }
+                return size;
+            };
+            
+        	
+        	ref.on("value", function(snapshot) {
+            	quotes = snapshot.val();
+            });
+            
+            
+            $("#rand").on("click", function(e) {
+                $("#quote-body, #auth").empty();
+                
+                entries = Object.size(quotes);
+            
+                chosen = Math.floor((Math.random() * entries));
+                
+                quote = quotes[chosen];
+                
+                $("#quote-body").append(quote[1]);
+                
+                $("#auth").append(quote[0]);
+            });
+            
+        </script>
+	</body>
+</html>
