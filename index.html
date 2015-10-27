@@ -2,6 +2,8 @@
 <html>
 	<head>
 		
+		<title>Free Code Camp | Random Quote</title>
+		
 		<!-- Compiled and minified CSS -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.1/css/materialize.min.css">
         
@@ -42,17 +44,33 @@
 			.favorited i {
 				color: yellow;
 			}
+			
+			footer a {
+				border: 1px solid grey;
+				padding: 5px 2px;
+				border-radius: 5%;
+				background-color: rgba(255,255,255,.4);
+			}
+			
+			footer a:hover {
+				border: 1px solid grey;
+				padding: 5px 2px;
+				border-radius: 5%;
+				background-color: rgba(255,255,255,.8);
+			}
             
         </style>
 	</head>
 	<body>
+		
+		
 		<nav>
 		    <div class="nav-wrapper">
 		      <a href="#" class="brand-logo"><i class="medium material-icons">chat_bubble_outline</i></a>
 		      <a href="#" data-activates="mobile-demo" class="button-collapse"><i class="material-icons">menu</i></a>
 		      <ul class="right hide-on-med-and-down">
 		        <li>
-		        	<a id="user" class="modal-trigger" href="#modal1"><i class="material-icons">perm_identity</i></a>
+		        	<a id="user" class="modal-trigger tooltipped" data-position="bottom" data-delay="40" data-tooltip="account" href="#modal1"><i class="material-icons">perm_identity</i></a>
 		        </li>
 		      </ul>
 		      <ul class="side-nav" id="mobile-demo">
@@ -63,9 +81,6 @@
 		    </div>
 	  	</nav>
 	  	
-	  
-    
-  
 		<main>
 	    	<div class="container">
 	        	
@@ -78,7 +93,7 @@
 	                    <div class="card teal lighten-2 hoverable">
 	                        <div class="card-content white-text">
 	                            <span class="card-title">Today's Quote</span>
-	                            <a href="#!" class="tooltipped secondary-content" data-position="top"  data-delay="30" data-tooltip="save this quote!" id="fav"><i class="material-icons">grade</i></a>
+	                            <a href="#!" class="tooltipped secondary-content unregistered" data-position="top"  data-delay="30" data-tooltip="save this quote!" id="fav"><i class="material-icons">grade</i></a>
 	                            <p id="quote-body"></p>
 	                        </div>
 	                        <div class="card-action">
@@ -100,6 +115,22 @@
 	        	</div> <!-- /.row -->
 	    	</div> 
 	    	
+	    	<footer class="page-footer">
+				<div class="container">
+	            <div class="row">
+	              <div class="col s12">
+	                <h5 class="white-text">Random Quotes</h5>
+	                <p class="grey-text text-lighten-4">This is an extension of <a href="http://www.freecodecamp.com/">Free Code Camp's</a> <strong><a href="http://www.freecodecamp.com/challenges/zipline-build-a-random-quote-machine">Random Quote Challenge</a></strong></p>
+	              </div>
+	            </div>
+	          </div>
+	          <div class="footer-copyright">
+	            <div class="container">
+	            2015 - Made with &#9829; by <a href="http://giorgiodelgado.ca/">Giorgio Delgado</a> 
+	            <a class="right" href="https://github.com/gdelgado14">GitHub</a>
+	            </div>
+	          </div>
+        	</footer>
 		</main>
 		
 		
@@ -151,9 +182,14 @@
 			<div class="modal-content">
 				<h3 class="center-align">Quotes HQ</h3>
 				<h6 class="center-align red-text text-lighten-2">Logged in as: <span id="hq-user"></span></h6>
-				<h4>Your Saved Quotes</h4>
-				<div class="row" id="HQ-quotes">
-				</div>
+				
+				
+				<ul class="collection with-header">
+					<li class="collection-header"><h4>Your Saved Quotes</h4></li>
+			        <div id="HQ-quotes">
+					</div>
+			    </ul>
+
     		</div>
 			<div class="modal-footer">
 				<a href="#!" id="unauth" class="modal-action modal-close waves-effect waves-green btn-flat">Log Out</a>
@@ -248,6 +284,18 @@
                 // of fav quotes and if current quote is favorited 
                 // change css of quote to color: yellow
                 // add id of #favorited to signify that
+                var loggedIn = ref.getAuth();
+                
+                if (loggedIn) {
+	                
+					ref.child("users/" + loggedIn.uid).once("value", function(s) {
+						if (s.hasChild('favorites')) {
+							if (s.val().favorites.indexOf(quoteid) > -1) {
+								$("#fav").toggleClass("favorited");
+							}
+						}
+					});
+				}
                 
             }
             
@@ -261,15 +309,58 @@
 				            quotesRef.child(id).once("value", function(s) {
 					            currQuote = s.val();
 				            });
-				            console.log(currQuote);
-				            $("#HQ-quotes").append('<p>' + currQuote["quote"] + '</p><h5><strong> - ' + currQuote["author"] + '</strong></h5>');
+				            $("#HQ-quotes").append('<li class="collection-item"><p>' + currQuote["quote"] + '</p><h6><strong> - ' + currQuote["author"] + '</strong></h6></li>');
 			            });
 		            }
 				});
 				//
 				
-				//logged in as #hq-user
+				$("#fav").removeClass('unregistered');
+				
+				ref.child('users/' + ref.getAuth().uid).once('value', function(s) {
+					$("#hq-user").append(s.val().username);
+					
+					// verify current quote as already favorited
+					if (s.hasChild('favorites')) {
+						if (s.val().favorites.indexOf(quoteid) > -1) {
+							console.log('have');
+							$("#fav").toggleClass("favorited");
+						}
+					}
+				});
+				
             }
+            
+            // listening to additional changes once logged on
+            ref.child("users/" + ref.getAuth().uid + "/favorites").on("child_added", function(s) {
+	            console.log("llooooo: ", s.val());
+	        	if (s.hasChildren()) {
+				    s.val().forEach(function(id) {
+						var currQuote;
+					    quotesRef.child(id).once("value", function(s) {
+							currQuote = s.val();
+					    });
+					    
+					    $("#HQ-quotes").append('<li class="collection-item"><p>' + currQuote["quote"] + '</p><h6><strong> - ' + currQuote["author"] + '</strong></h6></li>');
+				    });
+		        } 
+            });
+            
+            //
+            ref.child("users/" + ref.getAuth().uid + "/favorites").on("child_removed", function(s) {
+	            $("#HQ-quotes").empty();
+	            
+	            if (s.hasChildren()) {
+				    s.val().forEach(function(id) {
+						var currQuote;
+					    quotesRef.child(id).once("value", function(s) {
+							currQuote = s.val();
+					    });
+					    
+					    $("#HQ-quotes").append('<li class="collection-item"><p>' + currQuote["quote"] + '</p><h6><strong> - ' + currQuote["author"] + '</strong></h6></li>');
+				    });
+		        }
+            });
             
             var authUser = function() {
 	            
@@ -293,10 +384,10 @@
 							});
 							
 							$("#email, #password").val("");
+							
+							dashSetup();
 	  					}
 				});
-				
-				dashSetup();
             }
             
             function check_form(){
@@ -413,37 +504,59 @@
             $("#unauth").click(function() {
 		    	ref.unauth();
 		    	$("#user").attr("href", "#modal1");
-		    	$("#quote-submit").addClass("unregistered");
+		    	$("#quote-submit, #fav").addClass("unregistered");
+		    	$("#fav").removeClass("favorited");
+		    	$("#hq-user, #HQ-quotes").empty();
 				Materialize.toast('You are now logged out!', 4000);
             });
             
             $("#fav").click(function() {
 	            
-	            $(this).toggleClass("favorited");
-	            
-	            var favNode = ref.child("users/" + ref.getAuth().uid + "/favorites");
-	            
-	            favNode.once("value", function(s) {
-		            if (s.hasChildren()) {
-			            favNode.set([quoteid].concat(s.val()), function(e) {
-				            if (e) {console.log(e);}
-			            });
+	            if ($(this).hasClass('unregistered')) {
+		            
+		            Materialize.toast('register to save quotes', 4000);
+		            
+	            } else {
+	            	
+		            $(this).toggleClass("favorited");
+		            
+		            var favNode = ref.child("users/" + ref.getAuth().uid + "/favorites");
+		            
+		            if ($(this).hasClass("favorited")) {
+			            // add to list of favorites
+			            favNode.once("value", function(s) {
+			            	if (s.hasChildren()) {
+				            	// add to array of existing quote ids
+								favNode.set([quoteid].concat(s.val()), function(e) {
+					            	if (e) {console.log(e);}
+				            	});
+			            	} else {
+				            	// create array consisting of first quote id
+								favNode.set([quoteid], function(e) {
+					            	if (e) {console.log(e);}
+				            	});
+			            	}
+		            	});
 		            } else {
-			            favNode.set([quoteid], function(e) {
-				            if (e) {console.log(e);}
-			            });
+			            // remove from list of favorites
+			            favNode.once("value", function(s) {
+				            // new array, removes current
+				            // quote from favorites node
+				            var cleanedUp = s.val().filter(function(id) {
+					            return id !== quoteid;
+				            });
+				            
+				            favNode.set(cleanedUp, function(e) {
+					            if (e) {console.log(e);}
+				            })
+			            })
 		            }
-	            });
+		      
+	            }
 	            
             });
             
-            // TODO 
-            // remove add quote capabilities
-            // which means wipe href and .modal-trigger
-             
-            // if not logged in, user should not be able to favorite a quote
-            // if user clicks on star, use toast to notify
-            // 'login / register to save quotes!'
+          
             
         </script>
 	</body>
