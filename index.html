@@ -331,36 +331,6 @@
 				
             }
             
-            // listening to additional changes once logged on
-            ref.child("users/" + ref.getAuth().uid + "/favorites").on("child_added", function(s) {
-	            console.log("llooooo: ", s.val());
-	        	if (s.hasChildren()) {
-				    s.val().forEach(function(id) {
-						var currQuote;
-					    quotesRef.child(id).once("value", function(s) {
-							currQuote = s.val();
-					    });
-					    
-					    $("#HQ-quotes").append('<li class="collection-item"><p>' + currQuote["quote"] + '</p><h6><strong> - ' + currQuote["author"] + '</strong></h6></li>');
-				    });
-		        } 
-            });
-            
-            //
-            ref.child("users/" + ref.getAuth().uid + "/favorites").on("child_removed", function(s) {
-	            $("#HQ-quotes").empty();
-	            
-	            if (s.hasChildren()) {
-				    s.val().forEach(function(id) {
-						var currQuote;
-					    quotesRef.child(id).once("value", function(s) {
-							currQuote = s.val();
-					    });
-					    
-					    $("#HQ-quotes").append('<li class="collection-item"><p>' + currQuote["quote"] + '</p><h6><strong> - ' + currQuote["author"] + '</strong></h6></li>');
-				    });
-		        }
-            });
             
             var authUser = function() {
 	            
